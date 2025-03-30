@@ -142,7 +142,6 @@ def otf_incoherent(images, NA=1.2, wavelength=500, pixelsize=100):
     
     return output_images[0] if single_image else output_images
     
-
 def display_fourier(image):
     """Display the Fourier transform of an image."""
     plt.figure(figsize=(10, 5))
@@ -158,3 +157,45 @@ def display_fourier(image):
     plt.title('Fourier Transform')
     plt.axis('off')
     plt.show()
+
+def frc(image1, image2, num_bins=50):
+    """
+    Computes the Fourier Ring Correlation (FRC) between two images.
+
+    Parameters:
+        image1 (numpy array): First input image (H, W).
+        image2 (numpy array): Second input image (H, W).
+        num_bins (int): Number of radial frequency bins.
+
+    Returns:
+        tuple: (FRC values, frequency bins)
+    """
+    assert image1.shape == image2.shape, "Input images must have the same dimensions"
+    
+    H, W = image1.shape
+    
+    # Compute FFT of both images
+    fft1 = np.fft.fftshift(np.fft.fft2(image1))
+    fft2 = np.fft.fftshift(np.fft.fft2(image2))
+    
+    # Compute spatial frequency grid
+    fx = np.fft.fftshift(np.fft.fftfreq(W) * W)
+    fy = np.fft.fftshift(np.fft.fftfreq(H) * H)
+    FX, FY = np.meshgrid(fx, fy)
+    f = np.sqrt(FX**2 + FY**2)  # Radial frequency values
+    
+    # Define bins for frequency rings
+    max_freq = np.max(f)
+    bins = np.linspace(0, max_freq, num_bins + 1)
+    frc_values = np.zeros(num_bins)
+    
+    for i in range(num_bins):
+        mask = (f >= bins[i]) & (f < bins[i + 1])
+        
+        numerator = np.sum(fft1[mask] * np.conj(fft2[mask]))
+        denominator = np.sqrt(np.sum(np.abs(fft1[mask])**2) * np.sum(np.abs(fft2[mask])**2))
+        
+        if denominator != 0:
+            frc_values[i] = np.abs(numerator / denominator)
+    
+    return frc_values, bins[:-1]
