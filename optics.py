@@ -95,6 +95,9 @@ def circle_lowpass(images, r):
         filtered_image = np.fft.ifft2(np.fft.ifftshift(fft_cropped))
         filtered_image = np.real(filtered_image)
 
+        print(filtered_image.min(), filtered_image.max(), filtered_image.mean())
+
+        # Normalize the filtered image
         output_images[i] = normalize(filtered_image)
 
     return output_images[0] if single_image else output_images
@@ -138,23 +141,28 @@ def otf_incoherent(images, NA=1.2, wavelength=500, pixelsize=100):
         fft_img = np.fft.fftshift(np.fft.fft2(img))  # Compute FFT and shift zero frequency to center
         fft_filtered = fft_img * OTF  # Apply OTF
         filtered_image = np.fft.ifft2(np.fft.ifftshift(fft_filtered[H//4:3*H//4, W//4:3*W//4]))  # Compute inverse FFT
-        output_images[i] = normalize(np.real(filtered_image))  # Take real part
+        real_part = np.real(filtered_image)  # Take real part
+
+        # print(real_part.min(), real_part.max(), real_part.mean())
+        
+        output_images[i] = normalize(real_part)  # Normalize
     
     return output_images[0] if single_image else output_images
     
 def display_fourier(image):
     """Display the Fourier transform of an image."""
     plt.figure(figsize=(10, 5))
+    
     plt.subplot(1, 2, 1)
     plt.imshow(image, cmap='gray', vmin=0, vmax=1)
     plt.axis('off')
-    plt.title('Original Image')
+    plt.title('Spacial domain')
     
     ft = np.fft.fftshift(np.fft.fft2(image))
     magnitude = np.log(np.abs(ft) + 1)
     plt.subplot(1, 2, 2)
     plt.imshow(magnitude, cmap='gray')
-    plt.title('Fourier Transform')
+    plt.title('Frequency domain')
     plt.axis('off')
     plt.show()
 
