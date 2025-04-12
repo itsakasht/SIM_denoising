@@ -1,0 +1,9 @@
+# VS Code temporary file when running code
+tempCodeRunnerFile.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# VS Code workspace file
+*.code-workspace
