@@ -1,40 +1,110 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-
+# Parameters
+wavelength = 480  # in nanometers
 NA = 1.2
-wavelength = 400
-pixelsize = 100
-H = 255
-W = 255
-fc = NA / wavelength  # Cutoff frequency
-fx = np.fft.fftshift(np.fft.fftfreq(W, pixelsize))  # Normalized frequency coordinates
-fy = np.fft.fftshift(np.fft.fftfreq(H, pixelsize))
+pixelsize = 25  # in nanometers
+W, H = 1024, 1024
+pad_factor = 1  # Zero padding factor
 
-FX, FY = np.meshgrid(fx, fy)
-f = np.sqrt(FX**2 + FY**2)  # Spatial frequency magnitude
+# Define padded shape
+W_pad = W * pad_factor
+H_pad = H * pad_factor
 
-# Compute OTF based on the diffraction-limited incoherent system
-OTF = np.zeros_like(f)
-mask = f <= fc
-OTF[mask] = (2 / np.pi) * (np.arccos(f[mask] / fc) - (f[mask] / fc) * np.sqrt(1 - (f[mask] / fc) ** 2))
-# Example 2D matrix
+# Spatial frequency grids in radians/nm
+kx = np.fft.fftshift(np.fft.fftfreq(W_pad, d=pixelsize)) * 2 * np.pi
+ky = np.fft.fftshift(np.fft.fftfreq(H_pad, d=pixelsize)) * 2 * np.pi
+KX, KY = np.meshgrid(kx, ky)
+K_squared = KX**2 + KY**2
 
-# Create a 3D plot
-fig1, ax = plt.subplots(subplot_kw={"projection": "3d"})
-# Plot the surface
-ax.plot_surface(FX, FY, OTF, cmap='viridis')
-ax.set_title('Incoherent OTF')
+# Create circular CTF (cutoff spatial frequency)
+cutoff = NA * 2 * np.pi / wavelength  # in radians/nm
+CTF_padded = np.zeros_like(K_squared)
+CTF_padded[K_squared <= cutoff**2] = 1
 
-r = 64
-y, x = np.ogrid[:H, :W]
-center = (H // 2, W // 2)
-mask = (x - center[1])**2 + (y - center[0])**2 <= r**2
+# Compute Coherent PSF and Incoherent PSF
+cpsf = np.fft.ifft2(np.fft.ifftshift(CTF_padded))
+cpsf = np.fft.fftshift(cpsf)  # Center the PSF
+ipsf = np.abs(cpsf) ** 2
 
-# Create a 3D plot
-fig2, ax = plt.subplots(subplot_kw={"projection": "3d"})
-# Plot the surface
-ax.plot_surface(x, y, mask, cmap='viridis')
-ax.set_title('Circular OTF')
-# Show the plot
+OTF = np.abs(np.fft.fftshift(np.fft.fft2(ipsf)))  # OTF in the spatial domain
+OTF = OTF / np.max(OTF)  # Normalize OTF
+
+
+# Extract central crop for better visualization
+mid_y, mid_x = np.array(cpsf.shape) // 2
+window = 50
+
+x = np.linspace(-window//2, window//2, window)
+y = np.linspace(-window//2, window//2, window)
+X, Y = np.meshgrid(x, y)
+
+Z_coherent = np.abs(cpsf[mid_y - window//2 : mid_y + window//2,
+                         mid_x - window//2 : mid_x + window//2])
+Z_incoherent = ipsf[mid_y - window//2 : mid_y + window//2,
+                    mid_x - window//2 : mid_x + window//2]
+
+# Plot PSF
+fig = plt.figure(figsize=(14, 6))
+
+# Coherent PSF
+ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+ax1.plot_surface(X, Y, Z_coherent, cmap='inferno', edgecolor='none')
+ax1.set_title('Coherent PSF (Amplitude)')
+ax1.set_xlabel('x')
+ax1.set_ylabel('y')
+ax1.set_zlabel('Amplitude')
+
+# Incoherent PSF
+ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+ax2.plot_surface(X, Y, Z_incoherent, cmap='viridis', edgecolor='none')
+ax2.set_title('Incoherent PSF (Intensity)')
+ax2.set_xlabel('x')
+ax2.set_ylabel('y')
+ax2.set_zlabel('Intensity')
+
+plt.tight_layout()
+
+# otf_window = 512
+
+# Z_coherent_otf = np.abs(CTF_padded[mid_y - otf_window//2 : mid_y + otf_window//2,
+#                          mid_x - otf_window//2 : mid_x + otf_window//2])
+# Z_incoherent_otf = OTF[mid_y - otf_window//2 : mid_y + otf_window//2,
+#                     mid_x - otf_window//2 : mid_x + otf_window//2]
+
+# X_otf = KX[mid_y - otf_window//2 : mid_y + otf_window//2,
+#            mid_x - otf_window//2 : mid_x + otf_window//2]
+# Y_otf = KY[mid_y - otf_window//2 : mid_y + otf_window//2,
+#            mid_x - otf_window//2 : mid_x + otf_window//2]
+
+Z_coherent_otf = np.abs(CTF_padded)
+Z_incoherent_otf = OTF
+X_otf = KX
+Y_otf = KY
+
+print("OTF shape:", Z_coherent_otf.shape, Z_incoherent_otf.shape)
+
+# Plot OTF
+fig = plt.figure(figsize=(14, 6))
+
+# Coherent PSF
+ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+ax1.plot_surface(X_otf, Y_otf, Z_coherent_otf, cmap='inferno', edgecolor='none')
+ax1.set_title('Coherent OTF (Amplitude)')
+ax1.set_xlabel('x')
+ax1.set_ylabel('y')
+ax1.set_zlabel('Amplitude')
+
+# Incoherent PSF
+ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+ax2.plot_surface(X_otf, Y_otf, Z_incoherent_otf, cmap='viridis', edgecolor='none')
+ax2.set_title('Incoherent OTF (Ampltiude)')
+ax2.set_xlabel('x')
+ax2.set_ylabel('y')
+ax2.set_zlabel('Intensity')
+
+plt.tight_layout()
+
 plt.show()
