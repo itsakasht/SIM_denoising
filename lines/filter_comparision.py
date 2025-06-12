@@ -24,11 +24,11 @@ plt.rcParams['font.size'] = 12
 base_cool_color = "#1f77a4"
 base_warm_color = "#e51212"
 
-cool_color = ["#7b17eb", "#004aad", "#009fbc", "#00bf97"]
-warm_color = ["#e51212", "#a55318", "#ff8c2f", "#ffd323"]
+cool_color = ["#631cfe", "#0da6fe", "#11cbd1", "#25ffba"]
+warm_color = ["#e51212", "#cb6820", "#ffb222", "#ffed23"]
 
 # Load DataFrame
-df = pd.read_csv(os.path.join(current_dir, 'results/plots/optimum_params/optimum_filter_parameters.csv'))
+df = pd.read_csv(os.path.join(current_dir, 'results/plots/optimum_params_fixed_psf/optimum_filter_parameters.csv'))
 
 # Ground truth
 wf_path = os.path.join(current_dir, 'lines_wf.tif')
@@ -38,8 +38,10 @@ gt = ski.io.imread(wf_path)
 # Make folders if not exist
 os.makedirs(os.path.join(current_dir, "results/stacks"), exist_ok=True)
 os.makedirs(os.path.join(current_dir, "results/plots"), exist_ok=True)
-os.makedirs(os.path.join(current_dir, "results/plots/frc"), exist_ok=True)
+os.makedirs(os.path.join(current_dir, "results/plots/optimum_params_fixed_psf/frc"), exist_ok=True)
 os.makedirs(os.path.join(current_dir, "results/plots/best_filters"), exist_ok=True)
+os.makedirs(os.path.join(current_dir, "results/plots/optimum_params_fixed_psf/refilter_performance"), exist_ok=True)
+
 
 
 
@@ -138,7 +140,7 @@ for idx, row in df.iterrows():
         plt.imshow(frc_map, cmap='coolwarm' , origin='lower')
         plt.colorbar(label='Resolution (nm)')
         plt.title('FRC Resolution Map')
-        plt.savefig(os.path.join(current_dir, f"results/plots/frc/frc_map_snr{snr}_{noise_type}_{filters[i]}.png"))
+        plt.savefig(os.path.join(current_dir, f"results/plots/optimum_params_fixed_psf/frc/frc_map_snr{snr}_{noise_type}_{filters[i]}.png"))
         plt.close()
 
         results_table = generate_results_table(frc_values)
@@ -169,7 +171,7 @@ for idx, row in df.iterrows():
     plt.legend()
     plt.grid()
     
-    plt.savefig(os.path.join(current_dir, f"results/plots/frc/FRC_curve_snr{snr}_{noise_type}.png"))
+    plt.savefig(os.path.join(current_dir, f"results/plots/optimum_params_fixed_psf/frc/FRC_curve_snr{snr}_{noise_type}.png"))
     plt.close()
 
     # Compute PSNR and SSIM for each
@@ -198,7 +200,7 @@ for idx, row in df.iterrows():
 
     ax1.bar(filters, psnr_values, color=cool_color[:4])
     ax1.axhline(y=noisy_psnr, color='black', linestyle='--', label='Noisy PSNR', alpha=0.8)
-    ax1.set_ylim(0, 50)
+    ax1.set_ylim(0, 60)
     ax1.set_title(f"PSNR Comparison (SNR={snr}, {noise_type})")
     ax1.set_ylabel("PSNR")
     ax1.set_xlabel("Filter")
@@ -209,7 +211,7 @@ for idx, row in df.iterrows():
 
     ax2.bar(filters, ssim_values, color=warm_color[:4])
     ax2.axhline(y=noisy_ssim, color='black', linestyle='--', label='Noisy SSIM', alpha=0.8)
-    ax2.set_ylim(0, 1)
+    ax2.set_ylim(0, 1.2)
     ax2.set_title(f"SSIM Comparison (SNR={snr}, {noise_type})")
     ax2.set_ylabel("SSIM")
     ax2.set_xlabel("Filter")
@@ -220,17 +222,17 @@ for idx, row in df.iterrows():
 
     fig.suptitle(f"Filtered Performance for SNR={snr}, Noise={noise_type}", fontsize=16)
     fig.tight_layout()
-    fig.savefig(os.path.join(current_dir, f"results/plots/best_filters/performance_snr{snr}_{noise_type}.png"))
+    fig.savefig(os.path.join(current_dir, f"results/plots/optimum_params_fixed_psf/refilter_performance/performance_snr{snr}_{noise_type}.png"))
     plt.close(fig)
 
     print(f"Filters compared (SNR={snr}, Noise={noise_type})")
 
 # Save final table
 final_df = pd.DataFrame(final_table)
-final_df.to_csv(os.path.join(current_dir, 'results/plots/best_filters/final_performance_table.csv'), index=False)
+final_df.to_csv(os.path.join(current_dir, 'results/plots/optimum_params_fixed_psf/refilter_performance/final_performance_table.csv'), index=False)
 
 frc_final_df = pd.concat(frc_final_table, ignore_index=True)
-frc_final_df.to_csv(os.path.join(current_dir, 'results/plots/frc/final_frc_results_table.csv'), index=False)
+frc_final_df.to_csv(os.path.join(current_dir, 'results/plots/optimum_params_fixed_psf/frc/final_frc_results_table.csv'), index=False)
 
 # Save all filtered stacks
 # Sequence: SNR -> Noise -> Filter

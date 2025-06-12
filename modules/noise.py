@@ -8,12 +8,12 @@ def gauss_noise(images, snr=10, seed=2025):
     noisy_images = []
     msnr = []
     
-    ensure_batch(images)  # Add batch dim
+    images = ensure_batch(images)  # Add batch dim
     
     for image in images:
         signal_power = np.mean(image ** 2)
         noise_power = signal_power / snr
-        print(f'{np.sqrt(noise_power):.5f}')
+        # print(f'{np.sqrt(noise_power):.5f}')
         noise = rng.normal(0, np.sqrt(noise_power), image.shape)
         raw_noisy = image + noise
         noisy_image = np.clip(raw_noisy, 0, 1).astype(np.float32)
@@ -33,7 +33,7 @@ def poisson_noise(images, scale_factor=100 , seed=2025):
     noisy_images = []
     msnr = []
     
-    ensure_batch(images)  # Add batch dim
+    images = ensure_batch(images)  # Add batch dim
 
     for image in images:
         scaled = image * scale_factor
@@ -55,7 +55,7 @@ def salt_pepper_noise(images, snr=10, seed=2025):
     noisy_images = []
     msnr = []
     
-    ensure_batch(images)  # Add batch dim
+    images = ensure_batch(images)  # Add batch dim
     
     for image in images:
         signal_power = np.mean(image ** 2)        
@@ -88,7 +88,7 @@ def mix_noise(images, snr=10, seed=2025):
     noisy_images = []
     msnr = []
     
-    ensure_batch(images)  # Add batch dim
+    images = ensure_batch(images)  # Add batch dim
 
     gauss_snr = 3*snr
     poisson_scale = 6*snr

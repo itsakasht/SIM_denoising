@@ -34,12 +34,14 @@ df = pd.read_csv(os.path.join(current_dir, 'results/plots/optimum_params/optimum
 # Filter DataFrame for mix noise type
 mix_noise_df = df[df['NoiseType'] == 'Mix']
 
-SNR = [2, 5, 10, 20, 50, 100]
+SNR = [2, 5, 10, 50]
 
 
 # Apply filtering using parameters from the DataFrame
 for _, row in mix_noise_df.iterrows():
     snr = row["SNR"]
+    if int(snr) not in SNR:
+        continue
 
     # Load noisy image
     raw_a = ski.io.imread(os.path.join(current_dir, f"results/illumination/unfiltered/mix_raw_a_snr{snr}.tif"))
@@ -62,8 +64,14 @@ for _, row in mix_noise_df.iterrows():
         wiener_a[i] = ski.restoration.wiener(raw_a[i], psf=psf, balance=balance)
         wiener_b[i] = ski.restoration.wiener(raw_b[i], psf=psf, balance=balance)
     
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/wiener_a_snr{snr}.tif"), wiener_a.astype(np.float32), imagej=True)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/wiener_b_snr{snr}.tif"), wiener_b.astype(np.float32), imagej=True)
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/wiener_a_snr{snr}.tif"),
+                 wiener_a.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/wiener_b_snr{snr}.tif"),
+                 wiener_b.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
 
     # TV filter
     tv_weight = row["TV_Weight"]
@@ -74,8 +82,14 @@ for _, row in mix_noise_df.iterrows():
         tv_a[i] = ski.restoration.denoise_tv_chambolle(raw_a[i], weight=tv_weight)
         tv_b[i] = ski.restoration.denoise_tv_chambolle(raw_b[i], weight=tv_weight)
     
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/tv_a_snr{snr}.tif"), tv_a.astype(np.float32), imagej=True)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/tv_b_snr{snr}.tif"), tv_b.astype(np.float32), imagej=True)
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/tv_a_snr{snr}.tif"),
+                 tv_a.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/tv_b_snr{snr}.tif"),
+                 tv_b.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
 
     # RL filter
     rl_iter = row["RL_Iterations"]
@@ -95,8 +109,14 @@ for _, row in mix_noise_df.iterrows():
         rl_a[i] = ski.restoration.richardson_lucy(raw_a[i], psf=psf, num_iter=rl_iter)
         rl_b[i] = ski.restoration.richardson_lucy(raw_b[i], psf=psf, num_iter=rl_iter)
     
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/rl_a_snr{snr}.tif"), rl_a.astype(np.float32), imagej=True)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/rl_b_snr{snr}.tif"), rl_b.astype(np.float32), imagej=True)
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/rl_a_snr{snr}.tif"),
+                 rl_a.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/rl_b_snr{snr}.tif"),
+                 rl_b.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
 
     # BM3D filter
     bm3d_sigma = row["BM3D_Sigma"]
@@ -110,10 +130,16 @@ for _, row in mix_noise_df.iterrows():
         bm_a[i] = bm3d.bm3d(raw_a[i], sigma_psd=bm3d_sigma, stage_arg=stage)
         bm_b[i] = bm3d.bm3d(raw_b[i], sigma_psd=bm3d_sigma, stage_arg=stage)
 
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/bm3d_a_snr{snr}.tif"), bm_a.astype(np.float32), imagej=True)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/filtered/bm3d_b_snr{snr}.tif"), bm_b.astype(np.float32), imagej=True)
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/bm3d_a_snr{snr}.tif"),
+                 bm_a.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/prefiltered/bm3d_b_snr{snr}.tif"),
+                 bm_b.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
 
     print(f"Filtered SNR {snr}")
 
 mix_noise_df = mix_noise_df.drop(columns=['NoiseType', 'Noisy_PSNR', 'Noisy_SSIM', 'Wiener_PSNR', 'Wiener_SSIM', 'TV_PSNR', 'TV_SSIM', 'RL_PSNR', 'RL_SSIM', 'BM3D_PSNR', 'BM3D_SSIM'])
-mix_noise_df.to_csv(os.path.join(current_dir, 'results/illumination/filtered/mix_noise_filter_parameters.csv'), index=False)
+mix_noise_df.to_csv(os.path.join(current_dir, 'results/illumination/prefiltered/mix_noise_filter_parameters.csv'), index=False)

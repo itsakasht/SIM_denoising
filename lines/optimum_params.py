@@ -74,8 +74,8 @@ sigma_psd = np.array([0.001, 0.01, 0.1, 0.2, 0.4, 0.6, 1, 2, 5]) # BM3D filterin
 base_cool_color = "#1f77a4"
 base_warm_color = "#e51212"
 
-cool_color = ["#7b17eb", "#004aad", "#009fbc", "#00bf97"]
-warm_color = ["#e51212", "#a55318", "#ff8c2f", "#ffd323"]
+cool_color = ["#631cfe", "#0da6fe", "#11cbd1", "#25ffba"]
+warm_color = ["#e51212", "#cb6820", "#ffb222", "#ffed23"]
 
 
 for i in range(len(SNR)):

@@ -13,3 +13,4 @@ lines/results/stacks/*.tif
 lines/results/noisy_images/*.tif
 lines/results/illumination/filtered/*.tif
 lines/results/illumination/unfiltered/*.tif
+lines/results/illumination/prefiltered/*.tif

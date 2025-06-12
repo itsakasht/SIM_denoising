@@ -22,7 +22,7 @@ spacings = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                      11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
 # spacings = np.array([1, 5, 10, 15, 20, 25, 30, 35, 40])
 
-print('Spacings (nm): ', 25*spacings)
+print('Spacings (nm): ', 20*spacings)
 # Starting x-coordinate
 x = 20
 
@@ -35,17 +35,17 @@ for space in spacings:
 
 image = (image / 255).astype(np.float32)
 
-plt.figure()
-plt.set_cmap('gray')
-plt.imshow(image)
-plt.axis('off')
+# plt.figure()
+# plt.set_cmap('gray')
+# plt.imshow(image)
+# plt.axis('off')
 
 # op.display_fourier(image)
 
-plt.show()
+# plt.show()
 
 image_path = os.path.join(current_dir, "lines_gt.tif")
 ski.io.imsave(image_path, image)
 
-widefield = op.otf_incoherent(image, NA=1.2, wavelength=480, pixelsize=25)
+widefield = op.otf_incoherent(image, NA=1.2, wavelength=480, pixelsize=20)
 ski.io.imsave(os.path.join(current_dir, 'lines_wf.tif'), widefield)

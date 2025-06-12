@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def grating(size, angle, phase, NA=1.2, wavelength=600, pixelsize=100):
+def grating(size, angle, phase, wavelength=600, pixelsize=100):
     # wavelength in pixels, angle in degree, phase in degree
-    wavenumber = pixelsize * NA / wavelength
+    wavenumber = pixelsize / wavelength
     x = np.arange(size)
     y = np.arange(size)
     x, y = np.meshgrid(x, y, sparse=True)

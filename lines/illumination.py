@@ -32,7 +32,7 @@ widefield = ski.io.imread(wf_path)
 test_path = os.path.join(current_dir, 'Test.tif')
 test = ski.io.imread(test_path)
 
-SNR = [2, 5, 10, 20, 50, 100]
+SNR = [2, 5, 10, 20, 50]
 
 angles = np.array([[0, 120, 240], # 0 deg deviation
                    [0, 119, 241], # 1 deg deviation
@@ -71,22 +71,24 @@ phases = np.array([[0, 120, 240], # 0 deg deviation
                    [0, 140, 220]])# 10 deg deviation
 
 
-image = gt
-n = 9
-illuminated = np.zeros((n, image.shape[0], image.shape[1]))
-raw = np.zeros((n, image.shape[0]//2, image.shape[1]//2))
+# image = gt
+# n = 9
+# raw = np.zeros((n, image.shape[0]//2, image.shape[1]//2))
 
-for i in range(3):
-    for j in range(3):
-        illuminated[3*i + j] = image * op.grating(len(image), angle=30+angles[0, i],  phase=phases[0, j], NA=1.2, wavelength=500, pixelsize=25)
-        raw_double = op.otf_incoherent(illuminated[3*i + j], NA=1.2, wavelength=480, pixelsize=25)
-        raw[3*i + j] = op.fourier_downsample(raw_double)
+# for i in range(3):
+#     for j in range(3):
+#         illuminated = image * op.grating(len(image), angle=30+angles[0, i],  phase=phases[0, j], wavelength=220, pixelsize=20)
+#         raw_double = op.otf_incoherent(illuminated, NA=1.2, wavelength=480, pixelsize=20) # Diffraction limit is 200nm
+#         raw[3*i + j] = op.fourier_downsample(raw_double)
 
-tiff.imwrite(os.path.join(current_dir, "results/illumination/illuminated.tif"), raw.astype(np.float32), imagej=True)
+# tiff.imwrite(os.path.join(current_dir, "results/illumination/illuminated.tif"),
+#              raw.astype(np.float32),
+#              imagej=True,
+#              metadata={'axes': 'ZYX'})
+
+# exit()
 
 raw = ski.io.imread(os.path.join(current_dir, "results/illumination/illuminated.tif"))
-
-exit()
 
 mix_df = []
 for i in range(len(SNR)):
@@ -101,8 +103,14 @@ for i in range(len(SNR)):
             'MSNR_A': msnra,
             'MSNR_B': msnrb}
     mix_df.append(data)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/unfiltered/mix_raw_a_snr{SNR[i]}.tif"), mix_a.astype(np.float32), imagej=True)
-    tiff.imwrite(os.path.join(current_dir, f"results/illumination/unfiltered/mix_raw_b_snr{SNR[i]}.tif"), mix_b.astype(np.float32), imagej=True)
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/unfiltered/mix_raw_a_snr{SNR[i]}.tif"),
+                 mix_a.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
+    tiff.imwrite(os.path.join(current_dir, f"results/illumination/unfiltered/mix_raw_b_snr{SNR[i]}.tif"),
+                 mix_b.astype(np.float32),
+                 imagej=True,
+                 metadata={'axes': 'ZYX'})
 
 # Save results to CSV
 mix_df = pd.DataFrame(mix_df)
